@@ -21,12 +21,13 @@ SetCalculator::SetCalculator(std::istream& istr, std::ostream& ostr)
 
 void SetCalculator::run()
 {
+    //range should be set here .
     do
     {
         m_ostr << '\n';
         printOperations();
         m_ostr << "Enter command ('help' for the list of available commands): ";
-        const auto action = readAction();
+        const auto action = readAction();// *BAR* add exception to check if command is valid 
         runAction(action);
     } while (m_running);
 }
@@ -36,7 +37,7 @@ void SetCalculator::eval()
     if (auto index = readOperationIndex(); index)
     {
         const auto& operation = m_operations[*index];
-        auto inputs = std::vector<Set>();
+        auto inputs = std::vector<Set>();// *BAR* check if the input is valid (exception 
         for (auto i = 0; i < operation->inputCount(); ++i)
         {
             inputs.push_back(Set(m_istr));
@@ -98,6 +99,7 @@ std::optional<int> SetCalculator::readOperationIndex() const
 
 SetCalculator::Action SetCalculator::readAction() const
 {
+    //reading command : check exception 
     auto action = std::string();
     m_istr >> action;
 
@@ -119,7 +121,7 @@ void SetCalculator::runAction(Action action)
             break;
 
         case Action::Invalid:
-            m_ostr << "Command not found\n";
+            m_ostr << "Command not found\n";//should be in exception 
             break;
 
         case Action::Eval:         eval();                     break;
@@ -136,6 +138,9 @@ void SetCalculator::runAction(Action action)
 
 SetCalculator::ActionMap SetCalculator::createActions()
 {
+    //need to  add 
+    // read commdand 
+    // resize command
     return ActionMap
     {
         {
