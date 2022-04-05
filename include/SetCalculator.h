@@ -5,6 +5,7 @@
 #include <string>
 #include <iosfwd>
 #include <optional>
+#include <iostream>
 
 class Operation;
 
@@ -20,14 +21,25 @@ private:
     void help();
     void exit();
 
+    void readMaxCommands();
+    
     template <typename FuncType>
-    void binaryFunc()
+    void binaryFunc() try
     {
+
         if (auto f0 = readOperationIndex(), f1 = readOperationIndex(); f0 && f1)
         {
+            if (m_operations.size() == m_numOfCommands) 
+                throw std::exception("\nThe program can not save more commands");
+
             m_operations.push_back(std::make_shared<FuncType>(m_operations[*f0], m_operations[*f1]));
         }
     }
+    
+    catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+    }
+    
 
     void printOperations() const;
 
@@ -67,4 +79,6 @@ private:
 
     static ActionMap createActions();
     static OperationList createOperations();
+
+    int m_numOfCommands = 0;
 };

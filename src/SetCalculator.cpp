@@ -21,13 +21,15 @@ SetCalculator::SetCalculator(std::istream& istr, std::ostream& ostr)
 }
 
 void SetCalculator::run()
-{
-    //range should be set here .
+{    
+    readMaxCommands();
+
     do
     {
         m_ostr << '\n';
         printOperations();
-        m_ostr << "Enter command ('help' for the list of available commands): ";
+        m_ostr << "Max commands the program can save: " << m_numOfCommands << '\n'
+               << "Enter command ('help' for the list of available commands): ";
        
         try {
             const auto action = readAction();// *BAR* add exception to check if command is valid 
@@ -39,6 +41,30 @@ void SetCalculator::run()
         }
 
     } while (m_running);
+}
+
+void SetCalculator::readMaxCommands() try 
+{
+    std::string input;
+
+    m_ostr << "Enter max number of commands: ";
+
+    m_istr >> input;
+
+    m_numOfCommands = std::stoi(input);
+    
+    if (m_numOfCommands < 3 || m_numOfCommands> 100) 
+        throw std::out_of_range("Out of range. Please try again\n");
+
+}
+catch (const std::out_of_range& e)
+{
+    std::cerr << e.what() << '\n';
+    readMaxCommands();
+}
+catch (const std::exception& e) { // Todo: meytal check which exception
+    std::cerr << "Max number of commands should be a number. Please try again\n\n";
+    readMaxCommands();
 }
 
 void SetCalculator::eval()
@@ -115,7 +141,7 @@ SetCalculator::Action SetCalculator::readAction() const
     const auto i = std::ranges::find(m_actions, action, &ActionDetails::command);
 
     // Todo: meytal - i think it should be check another way
-    if (i == m_actions.end()) throw std::out_of_range("Command not found\n"); 
+    if (i == m_actions.end()) throw std::out_of_range("Command not found"); 
 
     if (i != m_actions.end())
     {
