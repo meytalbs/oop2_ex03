@@ -22,7 +22,7 @@ SetCalculator::SetCalculator(std::istream& istr, std::ostream& ostr)
 
 void SetCalculator::run()
 {    
-    readMaxCommands();
+    readMaxCommands("Enter max number of commands: ");
 
     do
     {
@@ -43,28 +43,61 @@ void SetCalculator::run()
     } while (m_running);
 }
 
-void SetCalculator::readMaxCommands() try 
-{
+void SetCalculator::readMaxCommands(std::string strMsg) try 
+{ 
     std::string input;
+    int max;
 
-    m_ostr << "Enter max number of commands: ";
+    m_ostr << strMsg;
 
     m_istr >> input;
 
-    m_numOfCommands = std::stoi(input);
+    max = std::stoi(input);
     
-    if (m_numOfCommands < 3 || m_numOfCommands> 100) 
+    if (max < 3 || max > 100) 
         throw std::out_of_range("Out of range. Please try again\n");
 
+    if (m_numOfCommands > max)
+        resizeOptions(max);
+    else
+       m_numOfCommands = max;
+    
 }
 catch (const std::out_of_range& e)
 {
     std::cerr << e.what() << '\n';
-    readMaxCommands();
+    readMaxCommands("Enter max number of commands: ");
 }
-catch (const std::exception& e) { // Todo: meytal check which exception
+catch (const std::exception& e) {
     std::cerr << "Max number of commands should be a number. Please try again\n\n";
-    readMaxCommands();
+    readMaxCommands("Enter max number of commands: ");
+}
+
+void SetCalculator::resizeOptions(int newMax) try
+{
+    int selection;
+
+    m_ostr << "You typed size smaller then current.\n"
+        << "To cancel resize command - typed 1\n"
+        << "To resize and the program delete some commands - typed 2\n\n";
+
+    m_istr >> selection;
+
+    if (!(selection == 1 || selection == 2)) throw std::out_of_range("You need to typed 1 or 2");
+    if (selection == 2)
+    {
+        for (int i = m_operations.size() - 1; i >= newMax; --i)
+            m_operations.erase(m_operations.begin() + *std::optional<int>(i));
+
+        m_numOfCommands = newMax;
+    }
+}
+catch (const std::out_of_range& e)
+{
+    std::cerr << e.what() << '\n';
+}
+catch (const std::exception& e) { 
+    std::cerr << "Should be a number.";
 }
 
 void SetCalculator::eval()
@@ -89,6 +122,11 @@ void SetCalculator::del()
     {
         m_operations.erase(m_operations.begin() + *i);
     }
+}
+
+void SetCalculator::resize()
+{
+    readMaxCommands("");
 }
 
 void SetCalculator::help()
@@ -163,6 +201,7 @@ void SetCalculator::runAction(Action action)
         case Action::Difference:   binaryFunc<Difference>();   break;
         case Action::Product:      binaryFunc<Product>();      break;
         case Action::Comp:         binaryFunc<Comp>();         break;
+        case Action::Resize:       resize();                   break; 
         case Action::Del:          del();                      break;
         case Action::Help:         help();                     break;
         case Action::Exit:         exit();                     break;
@@ -217,6 +256,11 @@ SetCalculator::ActionMap SetCalculator::createActions()
             "del",
             "(ete) num - delete operation #num from the operation list",
             Action::Del
+        },
+        {
+            "resize",
+            " num - resize max commands the program can save",
+            Action::Resize
         },
         {
             "help",

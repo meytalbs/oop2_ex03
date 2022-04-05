@@ -18,11 +18,13 @@ public:
 private:
     void eval();
     void del();
+    void resize();
     void help();
     void exit();
 
-    void readMaxCommands();
-    
+    void readMaxCommands(std::string);
+    void resizeOptions(int);
+
     template <typename FuncType>
     void binaryFunc() try
     {
@@ -34,12 +36,10 @@ private:
 
             m_operations.push_back(std::make_shared<FuncType>(m_operations[*f0], m_operations[*f1]));
         }
-    }
-    
+    }    
     catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
-    }
-    
+    }    
 
     void printOperations() const;
 
@@ -53,6 +53,7 @@ private:
         Product,
         Comp,
         Del,
+        Resize, 
         Help,
         Exit,
     };
