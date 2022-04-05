@@ -11,6 +11,7 @@
 #include <ostream>
 #include <sstream>
 #include <algorithm>
+#include <iostream>
 
 namespace rng = std::ranges;
 
@@ -27,8 +28,16 @@ void SetCalculator::run()
         m_ostr << '\n';
         printOperations();
         m_ostr << "Enter command ('help' for the list of available commands): ";
-        const auto action = readAction();// *BAR* add exception to check if command is valid 
-        runAction(action);
+       
+        try {
+            const auto action = readAction();// *BAR* add exception to check if command is valid 
+            runAction(action);
+        }
+
+        catch (const std::out_of_range& e) {
+            std::cerr << e.what() << '\n';
+        }
+
     } while (m_running);
 }
 
@@ -102,26 +111,24 @@ SetCalculator::Action SetCalculator::readAction() const
     //reading command : check exception 
     auto action = std::string();
     m_istr >> action;
-
+    
     const auto i = std::ranges::find(m_actions, action, &ActionDetails::command);
+
+    // Todo: meytal - i think it should be check another way
+    if (i == m_actions.end()) throw std::out_of_range("Command not found\n"); 
+
     if (i != m_actions.end())
     {
         return i->action;
     }
-
-    return Action::Invalid;
 }
 
 void SetCalculator::runAction(Action action)
 {
-    switch (action)
+    switch (action)    
     {
         default:
-            m_ostr << "Unknown enum entry used!\n";
-            break;
-
-        case Action::Invalid:
-            m_ostr << "Command not found\n";//should be in exception 
+            m_ostr << "Unknown enum entry used!\n"; // need to be with exception?
             break;
 
         case Action::Eval:         eval();                     break;
