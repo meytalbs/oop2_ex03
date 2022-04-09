@@ -23,7 +23,8 @@ public:
     // Used for print but also by various algorithms
     auto begin() const { return m_items.begin(); }
     auto end() const { return m_items.end(); }
-
+    auto getNum(int i) const{ return m_items[i]; };
+int vectorSize() const { return m_items.size(); };
 private:
     void makeSet();
 

@@ -18,11 +18,12 @@ namespace rng = std::ranges;
 SetCalculator::SetCalculator(std::istream& istr, std::ostream& ostr)
     : m_actions(createActions()), m_operations(createOperations()), m_istr(istr), m_ostr(ostr)
 {
+    readMaxCommands("Enter max number of commands: ");
+
 }
 
 void SetCalculator::run()
 {    
-    readMaxCommands("Enter max number of commands: ");
 
     do
     {
@@ -104,11 +105,24 @@ void SetCalculator::eval()
 {
     if (auto index = readOperationIndex(); index)
     {
+        
         const auto& operation = m_operations[*index];
-        auto inputs = std::vector<Set>();// *BAR* check if the input is valid (exception 
+       auto inputs = std::vector<Set>(); 
+      
         for (auto i = 0; i < operation->inputCount(); ++i)
         {
-            inputs.push_back(Set(m_istr));
+           
+            try{inputs.push_back(Set(m_istr)); }
+            catch (std::invalid_argument& e) {
+                std::cout << e.what() ;
+                m_istr.clear();
+                m_istr.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                //need to find a way to put on istream from index            
+               // m_istr << index;
+                run();
+                return;
+            }// *BAR* check if the input is valid (exception 
+           
         }
 
         operation->print(m_ostr, inputs);
