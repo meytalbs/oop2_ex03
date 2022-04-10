@@ -1,11 +1,13 @@
 #pragma once
 
+#include <fstream>
 #include <vector>
 #include <memory>
 #include <string>
 #include <iosfwd>
 #include <optional>
 #include <iostream>
+#include <sstream>
 
 class Operation;
 
@@ -42,7 +44,7 @@ private:
     }    
 
     void printOperations() const;
-
+    void readData();
     enum class Action
     {
         Invalid,
@@ -54,6 +56,7 @@ private:
         Comp,
         Del,
         Resize, 
+        Read,
         Help,
         Exit,
     };
@@ -64,7 +67,12 @@ private:
         std::string description;
         Action action;
     };
+    struct Data {
+        std::string command;
+        std::stringstream values;
+    };
 
+    Data m_dataInput;
     using ActionMap = std::vector<ActionDetails>;
     using OperationList = std::vector<std::shared_ptr<Operation>>;
 
@@ -73,13 +81,15 @@ private:
     bool m_running = true;
     std::istream& m_istr;
     std::ostream& m_ostr;
-
+    void read();
     std::optional<int> readOperationIndex() const;
     Action readAction() const;
     void runAction(Action action);
+    bool m_isReadngFromFile=false;
+    std::ifstream m_opFile;
 
     static ActionMap createActions();
     static OperationList createOperations();
-
+    std::istream* m_input;
     int m_numOfCommands = 0;
 };

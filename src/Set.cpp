@@ -7,16 +7,17 @@ namespace rng = std::ranges;
 
 Set::Set(std::istream& istr)
 {
-    int check_n;
     auto n = 0;
-    istr >> n;//check if n is good for set
-
-    if (typeid(n) != typeid(int) || n < 0)
+    
+    if (!(istr >> n) || n < 0)
         throw std::invalid_argument("bad input , please try again , enter command  \n");
     for (auto i = 0; i < n; ++i)
     {
         auto num = 0;
-        istr >> num;
+        
+        if (!(istr >> num))
+            throw std::invalid_argument("bad input , please try again , use only integers !  \n");
+
         m_items.push_back(num);
     }
     makeSet();
