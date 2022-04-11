@@ -36,28 +36,37 @@ void SetCalculator::run()
       
         try {
             //
+            readData();
             const auto action = readAction();// *BAR* add exception to check if command is valid        
             runAction(action);
         }
        
         catch (const std::out_of_range& e) {
-            std::cerr << e.what() << '\n';
-            if (m_isReadngFromFile)
+            if (!m_isReadngFromFile)
+               std::cerr << e.what() << '\n';
+            else
             {
 
-                m_istr.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            //    m_istr.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 m_ostr << "The operation  in the file failed.\n"
                     "would you like to stop read from the file? ";
                 std::string choice;
                 std::cin >> choice;
+                try {
+                    if (choice == "yes")
+                        break;
+                    else if (choice == "no") {
+                        continue;
 
-                if (choice == "yes")
-                    break;
-                else if (choice != "no") {
-                    exit();
-                    return;
-                    
+                    }
+                    else
+                        throw std::invalid_argument("plese enter yes or no\n");
                 }
+                catch (std::invalid_argument& e)
+                {
+                    std::cout << e.what();
+                }
+               
             }
         }
     
@@ -98,13 +107,13 @@ catch (const std::exception& e) {
 
 void SetCalculator::resizeOptions(int newMax) try
 {
-    int selection;
+    int selection =readNumber<int>();
 
     m_ostr << "You typed size smaller then current.\n"
         << "To cancel resize command - typed 1\n"
         << "To resize and the program delete some commands - typed 2\n\n";
 
-    *m_input >> selection;
+    
 
     if (!(selection == 1 || selection == 2)) throw std::out_of_range("You need to typed 1 or 2");
     if (selection == 2)
@@ -136,7 +145,7 @@ void SetCalculator::eval()
            
             try{
                 
-                inputs.push_back(Set(*m_input));
+                inputs.push_back(Set(m_dataInput.values));
             }
             catch (std::invalid_argument& e) {
                 std::cout << e.what() ;
@@ -196,10 +205,10 @@ void SetCalculator::printOperations() const
     m_ostr << '\n';
 }
 
-std::optional<int> SetCalculator::readOperationIndex() const
+std::optional<int> SetCalculator::readOperationIndex() 
 {
-    auto i = 0;
-    *m_input >> i;
+
+    auto i = readNumber<int>();
     if (i >= m_operations.size())
     {
         m_ostr << "Operation #" << i << " doesn't exist\n";
@@ -212,9 +221,9 @@ void SetCalculator::read()
 {
     std::string filePath;
     m_isReadngFromFile = true;
-    m_istr.ignore();
-    std::getline(m_istr, filePath);
-    std::streambuf* psbuf;
+   // std::getline(m_istr, filePath);
+    m_dataInput.values >> filePath;
+
     try {
         m_opFile.open(filePath);
         if (!m_opFile)
@@ -245,16 +254,23 @@ void SetCalculator::readFromFile()
         run();
     }
 }
+void SetCalculator::readData()
+{
+    m_dataInput.command.clear();
+    m_dataInput.values.clear();
+    m_dataInput.values.str(std::string());
+    *m_input >> m_dataInput.command;
+    std::string line;
+    std::getline(*m_input, line);
+    m_dataInput.values << line;
+}
 
 SetCalculator::Action SetCalculator::readAction() const
 {
     //reading command : check exception 
-    auto action = std::string();//chage to readData
-    *m_input >> action;
-    std::string line;
-    std::getline(*m_input, line);
-    m_dataInput.values << line;
-    
+     auto action =m_dataInput.command;//chage to readData
+   
+
     const auto i = std::ranges::find(m_actions, action, &ActionDetails::command);
 
     // Todo: meytal - i think it should be check another way

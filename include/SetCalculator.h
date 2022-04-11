@@ -43,8 +43,22 @@ private:
         std::cerr << e.what() << '\n';
     }    
 
+    template<class number>// eval 
+    number readNumber() {
+        m_dataInput.values.exceptions(std::ios::failbit | std::ios::badbit);
+        number x;
+        double y, z;
+        m_dataInput.values >> y;
+        z = std::floor(y);
+        if (y - z != 0)
+            throw std::iostream::failure("dont accept double");
+        else
+            x = number(z);
+
+        return x;
+    }
+
     void printOperations() const;
-    void readData();
     enum class Action
     {
         Invalid,
@@ -83,7 +97,9 @@ private:
     std::ostream& m_ostr;
     void readFromFile();
     void read();
-    std::optional<int> readOperationIndex() const;
+    std::optional<int> readOperationIndex() ;
+    void readData();
+
     Action readAction() const;
     void runAction(Action action);
     bool m_isReadngFromFile=false;
