@@ -41,9 +41,12 @@ void SetCalculator::run()
             runAction(action);
         }
        
-        catch (const std::out_of_range& e) {
+        catch (...) {
             if (!m_isReadngFromFile)
-               std::cerr << e.what() << '\n';
+            {
+                std::cerr << "command failed" << '\n';
+                continue;
+            }
             else
             {
 
@@ -149,10 +152,10 @@ void SetCalculator::eval()
             }
             catch (std::invalid_argument& e) {
                 std::cout << e.what() ;
-                m_input->clear();
-               m_input->ignore(std::numeric_limits<std::streamsize>::max(), '\n');
- 
-                run();
+            //    m_input->clear();
+           //    m_input->ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                throw;
+            //    run();
                 return;
             }// *BAR* check if the input is valid (exception 
            
@@ -249,7 +252,7 @@ void SetCalculator::readFromFile()
 {
     while (true)
     {
-        if (m_opFile.fail()) return;
+        if (m_opFile.fail()||m_opFile.eof()) return;
 
         run();
     }
