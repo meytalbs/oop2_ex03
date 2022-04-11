@@ -81,6 +81,7 @@ private:
     bool m_running = true;
     std::istream& m_istr;
     std::ostream& m_ostr;
+    void readFromFile();
     void read();
     std::optional<int> readOperationIndex() const;
     Action readAction() const;
