@@ -41,6 +41,10 @@ void SetCalculator::run()
         {
             std::cerr << e.what() << '\n';
         }
+        catch (const std::ios_base::failure& e)
+        {
+            std::cerr << "Bad input" << '\n';
+        }
         catch (...) {
             if (!m_isReadngFromFile)
             {
@@ -50,8 +54,8 @@ void SetCalculator::run()
             else
             {
             //    m_istr.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                m_ostr << "The operation  in the file failed.\n"
-                    "would you like to stop read from the file? ";
+                m_ostr << "The operation in the file failed.\n"
+                    "Would you like to stop read from the file? ";
                 std::string choice;
                 std::cin >> choice;
                 try {
@@ -61,7 +65,7 @@ void SetCalculator::run()
                         continue;
                     }
                     else
-                        throw std::invalid_argument("plese enter yes or no\n");
+                        throw std::invalid_argument("Plese enter yes or no\n");
                 }
                 catch (std::invalid_argument& e)
                 {
@@ -89,7 +93,7 @@ void SetCalculator::eval()
                 inputs.push_back(Set(m_dataInput.values));
             }
             catch (std::invalid_argument& e) {
-                std::cout << e.what() ;
+                std::cout << e.what();
             //    m_input->clear();
            //    m_input->ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 throw;
@@ -124,7 +128,7 @@ void SetCalculator::readMaxCommands(std::string strMsg) try
 
     m_ostr << strMsg;
 
-    if (m_dataInput.values.str() == "") 
+    if (m_dataInput.values.str() == "" || strMsg != "")
         *m_input >> input;
     else
         m_dataInput.values >> input;
@@ -152,13 +156,13 @@ catch (const std::exception& e) {
 
 void SetCalculator::resizeOptions(int newMax) try
 {
-    int selection = readNumber<int>();
-
+    int selection;
+    
     m_ostr << "You typed size smaller then current.\n"
         << "To cancel resize command - typed 1\n"
         << "To resize and the program delete some commands - typed 2\n\n";
 
-
+    std::cin >> selection;
 
     if (!(selection == 1 || selection == 2)) throw std::out_of_range("You need to typed 1 or 2");
     if (selection == 2)
@@ -209,13 +213,11 @@ void SetCalculator::printOperations() const
 
 std::optional<int> SetCalculator::readOperationIndex() 
 {
-
     auto i = readNumber<int>();
-    if (i >= m_operations.size())
-    {
-        m_ostr << "Operation #" << i << " doesn't exist\n";  // Todo: need to be in exeption
-        return {};
-    }
+
+    if (i >= m_operations.size() || i < 0)
+        throw std::out_of_range("You asked for unexist operation. Please try again");
+
     return i;
 }
 
@@ -256,6 +258,7 @@ void SetCalculator::readFromFile()
         run();
     }
 }
+
 void SetCalculator::readData()
 {
     m_dataInput.command.clear();
