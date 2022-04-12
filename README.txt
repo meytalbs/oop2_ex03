@@ -61,4 +61,5 @@ README.txt
 9. Other Comments
 - In order for the commands to work properly, all the data they must 
   receive in the same line must be recorded
+-we don't support read operation with in read operation. 
 

@@ -33,11 +33,9 @@ void SetCalculator::run()
 			<< "Enter command ('help' for the list of available commands): ";
 
 		try {
-
 			getInput();
 		}
 		catch (...) {
-
 			std::cerr << " command failed" << '\n';
 			continue;
 		}
@@ -55,22 +53,15 @@ void SetCalculator::eval()
 
 		for (auto i = 0; i < operation->inputCount(); ++i)
 		{
-
 			try {
-
 				inputs.push_back(Set(m_dataInput.values));
 			}
 			catch (std::invalid_argument& e) {
 				std::cout << e.what();
-				//    m_input->clear();
-			   //    m_input->ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 				throw;
-				//    run();
 				return;
-			}// *BAR* check if the input is valid (exception 
-
+			}
 		}
-
 		operation->print(m_ostr, inputs);
 		m_ostr << " = " << operation->compute(inputs) << '\n';
 	}
@@ -92,7 +83,7 @@ void SetCalculator::resize()
 void SetCalculator::getInput()
 {
 	readData();
-	const auto action = readAction();// *BAR* add exception to check if command is valid        
+	const auto action = readAction();
 	runAction(action);
 }
 
@@ -103,10 +94,10 @@ void SetCalculator::readMaxCommands(std::string strMsg) try
 
 	m_ostr << strMsg;
 
-    if (m_dataInput.values.str() == "" || strMsg != "")
-        *m_input >> input;
-    else
-        m_dataInput.values >> input;
+	if (m_dataInput.values.str() == "" || strMsg != "")
+		*m_input >> input;
+	else
+		m_dataInput.values >> input;
 
 	max = std::stoi(input);
 
@@ -122,22 +113,24 @@ void SetCalculator::readMaxCommands(std::string strMsg) try
 catch (const std::out_of_range& e)
 {
 	std::cerr << e.what() << '\n';
-	readMaxCommands("Enter max number of commands: ");
+	if (!m_numOfCommands)
+		readMaxCommands("Enter max number of commands: ");
 }
 catch (const std::exception& e) {
 	std::cerr << "Max number of commands should be a number. Please try again\n\n";
-	readMaxCommands("Enter max number of commands: ");
+	if (!m_numOfCommands)
+		readMaxCommands("Enter max number of commands: ");
 }
 
 void SetCalculator::resizeOptions(int newMax) try
 {
-    int selection;
-    
-    m_ostr << "You typed size smaller then current.\n"
-        << "To cancel resize command - typed 1\n"
-        << "To resize and the program delete some commands - typed 2\n\n";
+	int selection;
 
-    std::cin >> selection;
+	m_ostr << "You typed size smaller then current.\n"
+		<< "To cancel resize command - typed 1\n"
+		<< "To resize and the program delete some commands - typed 2\n\n";
+
+	std::cin >> selection;
 
 	if (!(selection == 1 || selection == 2)) throw std::out_of_range("You need to typed 1 or 2");
 	if (selection == 2)
@@ -188,19 +181,18 @@ void SetCalculator::printOperations() const
 
 std::optional<int> SetCalculator::readOperationIndex()
 {
-    auto i = readNumber<int>();
+	auto i = readNumber<int>();
 
-    if (i >= m_operations.size() || i < 0)
-        throw std::out_of_range("You asked for unexist operation. Please try again");
+	if (i >= m_operations.size() || i < 0)
+		throw std::out_of_range("You asked for unexist operation. Please try again");
 
-    return i;
+	return i;
 }
 
 void SetCalculator::read()
-{
+{//read fro mfile
 	std::string filePath;
 	m_isReadngFromFile = true;
-	// std::getline(m_istr, filePath);
 	m_dataInput.values >> filePath;
 
 	try {
@@ -211,8 +203,7 @@ void SetCalculator::read()
 	catch (std::system_error& e)
 	{
 		m_ostr << e.what();
-		m_istr.clear();
-		m_istr.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
 		run();
 	}
 	m_input = &m_opFile;
@@ -235,7 +226,7 @@ void SetCalculator::readFromFile()
 		try {
 			getInput();
 		}
-		catch (...) {
+		catch (...) {//catching all problem , and checkig if the file is ended or its a problem within the file 
 			if (m_opFile.fail())
 				std::cout << "\n file has ended , whoud you like to exit ? ";
 			else
@@ -243,19 +234,16 @@ void SetCalculator::readFromFile()
 				"would you like to stop read from the file? ";
 			yesOrNo();
 		}
-
 	}
-
 }
 void SetCalculator::yesOrNo() try
-{
+{//checking for yes or no from user regarding the file system
 	std::string choice;
 	std::cin >> choice;
 	if (choice == "yes")
 	{
 		if (m_opFile.fail())
 			exit();
-
 	}
 	else if (choice == "no") {
 		return;
@@ -270,7 +258,7 @@ catch (std::invalid_argument& e)
 }
 
 void SetCalculator::readData()
-{
+{//reading data from user / file (we dont support read in read)
 	m_dataInput.command.clear();
 	m_dataInput.values.clear();
 	m_dataInput.values.str(std::string());
