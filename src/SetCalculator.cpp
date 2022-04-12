@@ -20,7 +20,6 @@ SetCalculator::SetCalculator(std::istream& istr, std::ostream& ostr)
 	: m_actions(createActions()), m_operations(createOperations()), m_istr(istr), m_ostr(ostr), m_input(&m_istr)
 {
 	readMaxCommands("Enter max number of commands: ");
-
 }
 
 void SetCalculator::run()
@@ -30,36 +29,38 @@ void SetCalculator::run()
 		m_ostr << '\n';
 		printOperations();
 		m_ostr << "Max commands the program can save: " << m_numOfCommands << '\n'
-			<< "Enter command ('help' for the list of available commands): ";
+			   << "Enter command ('help' for the list of available commands): ";
 
-		try {
+		try 
+		{
 			getInput();
 		}
-		catch (...) {
-			std::cerr << " command failed" << '\n';
+		catch (...) 
+		{
+			std::cerr << "command failed" << '\n';
 			continue;
 		}
+
 	} while (m_running);
 }
-
 
 void SetCalculator::eval()
 {
 	if (auto index = readOperationIndex(); index)
 	{
-
 		const auto& operation = m_operations[*index];
 		auto inputs = std::vector<Set>();
 
 		for (auto i = 0; i < operation->inputCount(); ++i)
 		{
-			try {
+			try 
+			{
 				inputs.push_back(Set(m_dataInput.values));
 			}
-			catch (std::invalid_argument& e) {
+			catch (std::invalid_argument& e) 
+			{
 				std::cout << e.what();
 				throw;
-				return;
 			}
 		}
 		operation->print(m_ostr, inputs);
@@ -116,7 +117,8 @@ catch (const std::out_of_range& e)
 	if (!m_numOfCommands)
 		readMaxCommands("Enter max number of commands: ");
 }
-catch (const std::exception& e) {
+catch (const std::exception& e) 
+{
 	std::cerr << "Max number of commands should be a number. Please try again\n\n";
 	if (!m_numOfCommands)
 		readMaxCommands("Enter max number of commands: ");
@@ -145,10 +147,10 @@ catch (const std::out_of_range& e)
 {
 	std::cerr << e.what() << '\n';
 }
-catch (const std::exception& e) {
+catch (const std::exception& e) 
+{
 	std::cerr << "Should be a number.";
 }
-
 
 void SetCalculator::help()
 {
@@ -190,13 +192,15 @@ std::optional<int> SetCalculator::readOperationIndex()
 }
 
 void SetCalculator::read()
-{//read fro mfile
+{
 	std::string filePath;
 	m_isReadngFromFile = true;
 	m_dataInput.values >> filePath;
 
-	try {
+	try 
+	{
 		m_opFile.open(filePath);
+
 		if (!m_opFile)
 			throw std::system_error(errno, std::system_category(), "failed to open file\n");
 	}
@@ -206,15 +210,14 @@ void SetCalculator::read()
 
 		run();
 	}
+
 	m_input = &m_opFile;
 	readFromFile();
-
 	m_opFile.close();
 	m_input = &m_istr;
 	m_isReadngFromFile = false;
-
 }
-
+//
 void SetCalculator::readFromFile()
 {
 	while (!m_opFile.fail() && m_running)
@@ -226,7 +229,8 @@ void SetCalculator::readFromFile()
 		try {
 			getInput();
 		}
-		catch (...) {//catching all problem , and checkig if the file is ended or its a problem within the file 
+		//catching all problem , and checkig if the file is ended or its a problem within the file 
+		catch (...) { 
 			if (m_opFile.fail())
 				std::cout << "\n file has ended , whoud you like to exit ? ";
 			else
@@ -236,8 +240,10 @@ void SetCalculator::readFromFile()
 		}
 	}
 }
+
+//checking for yes or no from user regarding the file system
 void SetCalculator::yesOrNo() try
-{//checking for yes or no from user regarding the file system
+{  	
 	std::string choice;
 	std::cin >> choice;
 	if (choice == "yes")
@@ -245,7 +251,8 @@ void SetCalculator::yesOrNo() try
 		if (m_opFile.fail())
 			exit();
 	}
-	else if (choice == "no") {
+	else if (choice == "no") 
+	{
 		return;
 	}
 	else
@@ -257,8 +264,9 @@ catch (std::invalid_argument& e)
 	yesOrNo();
 }
 
+//reading data from user / file (we dont support read in read)
 void SetCalculator::readData()
-{//reading data from user / file (we dont support read in read)
+{
 	m_dataInput.command.clear();
 	m_dataInput.values.clear();
 	m_dataInput.values.str(std::string());
@@ -270,8 +278,7 @@ void SetCalculator::readData()
 
 SetCalculator::Action SetCalculator::readAction() const
 {
-	//reading command : check exception 
-	auto action = m_dataInput.command;//chage to readData
+	auto action = m_dataInput.command;
 
 	const auto i = std::ranges::find(m_actions, action, &ActionDetails::command);
 
@@ -281,6 +288,7 @@ SetCalculator::Action SetCalculator::readAction() const
 	{
 		if (m_isReadngFromFile)
 			std::cout << action << std::endl;
+		
 		return i->action;
 	}
 }
@@ -289,24 +297,22 @@ void SetCalculator::runAction(Action action)
 {
 	switch (action)
 	{
-	case Action::Eval:         eval();                     break;
-	case Action::Union:        binaryFunc<Union>();        break;
-	case Action::Intersection: binaryFunc<Intersection>(); break;
-	case Action::Difference:   binaryFunc<Difference>();   break;
-	case Action::Product:      binaryFunc<Product>();      break;
-	case Action::Comp:         binaryFunc<Comp>();         break;
-	case Action::Resize:       resize();                   break;
-	case Action::Read:         read();                     break;
-	case Action::Del:          del();                      break;
-	case Action::Help:         help();                     break;
-	case Action::Exit:         exit();                     break;
+		case Action::Eval:			eval();                     break;
+		case Action::Union:			binaryFunc<Union>();        break;
+		case Action::Intersection:	binaryFunc<Intersection>(); break;
+		case Action::Difference:	binaryFunc<Difference>();   break;
+		case Action::Product:		binaryFunc<Product>();      break;
+		case Action::Comp:			binaryFunc<Comp>();         break;
+		case Action::Resize:		resize();                   break;
+		case Action::Read:			read();                     break;
+		case Action::Del:			del();                      break;
+		case Action::Help:			help();                     break;
+		case Action::Exit:			exit();                     break;
 	}
 }
 
 SetCalculator::ActionMap SetCalculator::createActions()
 {
-	//need to  add 
-	// read commdand 
 	return ActionMap
 	{
 		{
@@ -359,7 +365,7 @@ SetCalculator::ActionMap SetCalculator::createActions()
 		},
 		  {
 			"read",
-			" read from file",
+			" path to file - read commands from file and executes them",
 			Action::Read
 		},
 		{
@@ -377,8 +383,7 @@ SetCalculator::ActionMap SetCalculator::createActions()
 
 SetCalculator::OperationList SetCalculator::createOperations()
 {
-	return OperationList
-	{
+	return OperationList {
 		std::make_shared<Union>(std::make_shared<Identity>(), std::make_shared<Identity>()),
 		std::make_shared<Intersection>(std::make_shared<Identity>(), std::make_shared<Identity>()),
 		std::make_shared<Difference>(std::make_shared<Identity>(), std::make_shared<Identity>())
