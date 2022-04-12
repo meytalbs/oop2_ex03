@@ -14,7 +14,7 @@ Set::Set(std::istream& istr)
     for (auto i = 0; i < n; ++i)
     {
         auto num = 0;
-        
+       
         if (!(istr >> num))
             throw std::invalid_argument("bad input , please try again , use only integers !  \n");
 

@@ -42,6 +42,8 @@ private:
     catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
     }    
+    void yesOrNo();
+    void getInput();
 
     template<class number>// eval 
     number readNumber() {
