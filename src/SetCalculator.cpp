@@ -33,7 +33,7 @@ void SetCalculator::run()
 			<< "Enter command ('help' for the list of available commands): ";
 
 		try {
-			//
+
 			getInput();
 		}
 		catch (...) {
