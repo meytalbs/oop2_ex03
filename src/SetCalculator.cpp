@@ -25,22 +25,22 @@ SetCalculator::SetCalculator(std::istream& istr, std::ostream& ostr)
 
 void SetCalculator::run()
 {    
-
     do
     {
         m_ostr << '\n';
         printOperations();
         m_ostr << "Max commands the program can save: " << m_numOfCommands << '\n'
-            << "Enter command ('help' for the list of available commands): ";
-        
+            << "Enter command ('help' for the list of available commands): ";        
       
         try {
-            //
             readData();
-            const auto action = readAction();// *BAR* add exception to check if command is valid        
+            const auto action = readAction();
             runAction(action);
+        }       
+        catch (const std::out_of_range& e)
+        {
+            std::cerr << e.what() << '\n';
         }
-       
         catch (...) {
             if (!m_isReadngFromFile)
             {
@@ -49,7 +49,6 @@ void SetCalculator::run()
             }
             else
             {
-
             //    m_istr.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 m_ostr << "The operation  in the file failed.\n"
                     "would you like to stop read from the file? ";
@@ -60,7 +59,6 @@ void SetCalculator::run()
                         break;
                     else if (choice == "no") {
                         continue;
-
                     }
                     else
                         throw std::invalid_argument("plese enter yes or no\n");
@@ -68,79 +66,19 @@ void SetCalculator::run()
                 catch (std::invalid_argument& e)
                 {
                     std::cout << e.what();
-                }
-               
+                }               
             }
         }
-    
-
-
     } while (m_running);
 }
 
-void SetCalculator::readMaxCommands(std::string strMsg) try 
-{ 
-    std::string input;
-    int max;
-
-    m_ostr << strMsg;
-
-    *m_input >> input;
-
-    max = std::stoi(input);
-    
-    if (max < 3 || max > 100) 
-        throw std::out_of_range("Out of range. Please try again\n");
-
-    if (m_numOfCommands > max)
-        resizeOptions(max);
-    else
-       m_numOfCommands = max;
-    
-}
-catch (const std::out_of_range& e)
-{
-    std::cerr << e.what() << '\n';
-    readMaxCommands("Enter max number of commands: ");
-}
-catch (const std::exception& e) {
-    std::cerr << "Max number of commands should be a number. Please try again\n\n";
-    readMaxCommands("Enter max number of commands: ");
-}
-
-void SetCalculator::resizeOptions(int newMax) try
-{
-    int selection =readNumber<int>();
-
-    m_ostr << "You typed size smaller then current.\n"
-        << "To cancel resize command - typed 1\n"
-        << "To resize and the program delete some commands - typed 2\n\n";
-
-    
-
-    if (!(selection == 1 || selection == 2)) throw std::out_of_range("You need to typed 1 or 2");
-    if (selection == 2)
-    {
-        for (int i = m_operations.size() - 1; i >= newMax; --i)
-            m_operations.erase(m_operations.begin() + *std::optional<int>(i));
-
-        m_numOfCommands = newMax;
-    }
-}
-catch (const std::out_of_range& e)
-{
-    std::cerr << e.what() << '\n';
-}
-catch (const std::exception& e) { 
-    std::cerr << "Should be a number.";
-}
 
 void SetCalculator::eval()
 {
     if (auto index = readOperationIndex(); index)
     {
         
-        const auto& operation = m_operations[*index];
+       const auto& operation = m_operations[*index];
        auto inputs = std::vector<Set>(); 
       
         for (auto i = 0; i < operation->inputCount(); ++i)
@@ -179,6 +117,67 @@ void SetCalculator::resize()
     readMaxCommands("");
 }
 
+void SetCalculator::readMaxCommands(std::string strMsg) try
+{
+    std::string input;
+    int max;
+
+    m_ostr << strMsg;
+
+    if (m_dataInput.values.str() == "") 
+        *m_input >> input;
+    else
+        m_dataInput.values >> input;
+
+    max = std::stoi(input);
+
+    if (max < 3 || max > 100)
+        throw std::out_of_range("Out of range. Please try again\n");
+
+    if (m_numOfCommands > max)
+        resizeOptions(max);
+    else
+        m_numOfCommands = max;
+
+}
+catch (const std::out_of_range& e)
+{
+    std::cerr << e.what() << '\n';
+    readMaxCommands("Enter max number of commands: ");
+}
+catch (const std::exception& e) {
+    std::cerr << "Max number of commands should be a number. Please try again\n\n";
+    readMaxCommands("Enter max number of commands: ");
+}
+
+void SetCalculator::resizeOptions(int newMax) try
+{
+    int selection = readNumber<int>();
+
+    m_ostr << "You typed size smaller then current.\n"
+        << "To cancel resize command - typed 1\n"
+        << "To resize and the program delete some commands - typed 2\n\n";
+
+
+
+    if (!(selection == 1 || selection == 2)) throw std::out_of_range("You need to typed 1 or 2");
+    if (selection == 2)
+    {
+        for (int i = m_operations.size() - 1; i >= newMax; --i)
+            m_operations.erase(m_operations.begin() + *std::optional<int>(i));
+
+        m_numOfCommands = newMax;
+    }
+}
+catch (const std::out_of_range& e)
+{
+    std::cerr << e.what() << '\n';
+}
+catch (const std::exception& e) {
+    std::cerr << "Should be a number.";
+}
+
+
 void SetCalculator::help()
 {
     m_ostr << "The available commands are:\n";
@@ -214,7 +213,7 @@ std::optional<int> SetCalculator::readOperationIndex()
     auto i = readNumber<int>();
     if (i >= m_operations.size())
     {
-        m_ostr << "Operation #" << i << " doesn't exist\n";
+        m_ostr << "Operation #" << i << " doesn't exist\n";  // Todo: need to be in exeption
         return {};
     }
     return i;
@@ -271,13 +270,11 @@ void SetCalculator::readData()
 SetCalculator::Action SetCalculator::readAction() const
 {
     //reading command : check exception 
-     auto action =m_dataInput.command;//chage to readData
+    auto action = m_dataInput.command;//chage to readData
    
-
     const auto i = std::ranges::find(m_actions, action, &ActionDetails::command);
 
-    // Todo: meytal - i think it should be check another way
-    if (i == m_actions.end()) throw std::out_of_range("Command not found"); 
+    if (i == m_actions.end()) throw std::out_of_range("Command not exist"); 
 
     if (i != m_actions.end())
     {
@@ -291,10 +288,6 @@ void SetCalculator::runAction(Action action)
 {
     switch (action)    
     {
-        default:
-            m_ostr << "Unknown enum entry used!\n"; // need to be with exception?
-            break;
-
         case Action::Eval:         eval();                     break;
         case Action::Union:        binaryFunc<Union>();        break;
         case Action::Intersection: binaryFunc<Intersection>(); break;
@@ -313,7 +306,6 @@ SetCalculator::ActionMap SetCalculator::createActions()
 {
     //need to  add 
     // read commdand 
-    // resize command
     return ActionMap
     {
         {
