@@ -7,6 +7,7 @@
 #include "Comp.h"
 #include "Identity.h"
 
+#include <fstream>
 #include <istream>
 #include <ostream>
 #include <sstream>
@@ -16,29 +17,63 @@
 namespace rng = std::ranges;
 
 SetCalculator::SetCalculator(std::istream& istr, std::ostream& ostr)
-    : m_actions(createActions()), m_operations(createOperations()), m_istr(istr), m_ostr(ostr)
+    : m_actions(createActions()), m_operations(createOperations()), m_istr(istr), m_ostr(ostr),m_input(&m_istr)
 {
+    readMaxCommands("Enter max number of commands: ");
+
 }
 
 void SetCalculator::run()
 {    
-    readMaxCommands("Enter max number of commands: ");
 
     do
     {
         m_ostr << '\n';
         printOperations();
         m_ostr << "Max commands the program can save: " << m_numOfCommands << '\n'
-               << "Enter command ('help' for the list of available commands): ";
-       
+            << "Enter command ('help' for the list of available commands): ";
+        
+      
         try {
-            const auto action = readAction();// *BAR* add exception to check if command is valid 
+            //
+            readData();
+            const auto action = readAction();// *BAR* add exception to check if command is valid        
             runAction(action);
         }
+       
+        catch (...) {
+            if (!m_isReadngFromFile)
+            {
+                std::cerr << "command failed" << '\n';
+                continue;
+            }
+            else
+            {
 
-        catch (const std::out_of_range& e) {
-            std::cerr << e.what() << '\n';
+            //    m_istr.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                m_ostr << "The operation  in the file failed.\n"
+                    "would you like to stop read from the file? ";
+                std::string choice;
+                std::cin >> choice;
+                try {
+                    if (choice == "yes")
+                        break;
+                    else if (choice == "no") {
+                        continue;
+
+                    }
+                    else
+                        throw std::invalid_argument("plese enter yes or no\n");
+                }
+                catch (std::invalid_argument& e)
+                {
+                    std::cout << e.what();
+                }
+               
+            }
         }
+    
+
 
     } while (m_running);
 }
@@ -50,7 +85,7 @@ void SetCalculator::readMaxCommands(std::string strMsg) try
 
     m_ostr << strMsg;
 
-    m_istr >> input;
+    *m_input >> input;
 
     max = std::stoi(input);
     
@@ -75,13 +110,13 @@ catch (const std::exception& e) {
 
 void SetCalculator::resizeOptions(int newMax) try
 {
-    int selection;
+    int selection =readNumber<int>();
 
     m_ostr << "You typed size smaller then current.\n"
         << "To cancel resize command - typed 1\n"
         << "To resize and the program delete some commands - typed 2\n\n";
 
-    m_istr >> selection;
+    
 
     if (!(selection == 1 || selection == 2)) throw std::out_of_range("You need to typed 1 or 2");
     if (selection == 2)
@@ -104,11 +139,26 @@ void SetCalculator::eval()
 {
     if (auto index = readOperationIndex(); index)
     {
+        
         const auto& operation = m_operations[*index];
-        auto inputs = std::vector<Set>();// *BAR* check if the input is valid (exception 
+       auto inputs = std::vector<Set>(); 
+      
         for (auto i = 0; i < operation->inputCount(); ++i)
         {
-            inputs.push_back(Set(m_istr));
+           
+            try{
+                
+                inputs.push_back(Set(m_dataInput.values));
+            }
+            catch (std::invalid_argument& e) {
+                std::cout << e.what() ;
+            //    m_input->clear();
+           //    m_input->ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                throw;
+            //    run();
+                return;
+            }// *BAR* check if the input is valid (exception 
+           
         }
 
         operation->print(m_ostr, inputs);
@@ -158,10 +208,10 @@ void SetCalculator::printOperations() const
     m_ostr << '\n';
 }
 
-std::optional<int> SetCalculator::readOperationIndex() const
+std::optional<int> SetCalculator::readOperationIndex() 
 {
-    auto i = 0;
-    m_istr >> i;
+
+    auto i = readNumber<int>();
     if (i >= m_operations.size())
     {
         m_ostr << "Operation #" << i << " doesn't exist\n";
@@ -170,12 +220,60 @@ std::optional<int> SetCalculator::readOperationIndex() const
     return i;
 }
 
+void SetCalculator::read()
+{
+    std::string filePath;
+    m_isReadngFromFile = true;
+   // std::getline(m_istr, filePath);
+    m_dataInput.values >> filePath;
+
+    try {
+        m_opFile.open(filePath);
+        if (!m_opFile)
+            throw std::system_error(errno, std::system_category(),"failed to open file\n");
+    }
+    catch (std::system_error& e)
+    {
+        m_ostr << e.what();
+        m_istr.clear();
+        m_istr.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        run();
+     }
+    m_input = &m_opFile;
+    readFromFile();
+   
+    m_opFile.close();
+    m_input = &m_istr;
+    m_isReadngFromFile = false;
+
+}
+
+void SetCalculator::readFromFile()
+{
+    while (true)
+    {
+        if (m_opFile.fail()||m_opFile.eof()) return;
+
+        run();
+    }
+}
+void SetCalculator::readData()
+{
+    m_dataInput.command.clear();
+    m_dataInput.values.clear();
+    m_dataInput.values.str(std::string());
+    *m_input >> m_dataInput.command;
+    std::string line;
+    std::getline(*m_input, line);
+    m_dataInput.values << line;
+}
+
 SetCalculator::Action SetCalculator::readAction() const
 {
     //reading command : check exception 
-    auto action = std::string();
-    m_istr >> action;
-    
+     auto action =m_dataInput.command;//chage to readData
+   
+
     const auto i = std::ranges::find(m_actions, action, &ActionDetails::command);
 
     // Todo: meytal - i think it should be check another way
@@ -183,6 +281,8 @@ SetCalculator::Action SetCalculator::readAction() const
 
     if (i != m_actions.end())
     {
+        if (m_isReadngFromFile)
+            std::cout << action<<std::endl;
         return i->action;
     }
 }
@@ -202,6 +302,7 @@ void SetCalculator::runAction(Action action)
         case Action::Product:      binaryFunc<Product>();      break;
         case Action::Comp:         binaryFunc<Comp>();         break;
         case Action::Resize:       resize();                   break; 
+        case Action::Read:         read();                     break;
         case Action::Del:          del();                      break;
         case Action::Help:         help();                     break;
         case Action::Exit:         exit();                     break;
@@ -246,6 +347,7 @@ SetCalculator::ActionMap SetCalculator::createActions()
             " the items from the results of operation #num1 and operation #num2",
             Action::Product
         },
+
         {
             "comp",
             "(osite) num1 num2 - creates an operation that is the composition "
@@ -261,6 +363,11 @@ SetCalculator::ActionMap SetCalculator::createActions()
             "resize",
             " num - resize max commands the program can save",
             Action::Resize
+        },
+          {
+            "read",
+            " read from file",
+            Action::Read
         },
         {
             "help",

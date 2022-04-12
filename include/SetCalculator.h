@@ -1,11 +1,13 @@
 #pragma once
 
+#include <fstream>
 #include <vector>
 #include <memory>
 #include <string>
 #include <iosfwd>
 #include <optional>
 #include <iostream>
+#include <sstream>
 
 class Operation;
 
@@ -41,8 +43,22 @@ private:
         std::cerr << e.what() << '\n';
     }    
 
-    void printOperations() const;
+    template<class number>// eval 
+    number readNumber() {
+        m_dataInput.values.exceptions(std::ios::failbit | std::ios::badbit);
+        number x;
+        double y, z;
+        m_dataInput.values >> y;
+        z = std::floor(y);
+        if (y - z != 0)
+            throw std::iostream::failure("dont accept double");
+        else
+            x = number(z);
 
+        return x;
+    }
+
+    void printOperations() const;
     enum class Action
     {
         Invalid,
@@ -54,6 +70,7 @@ private:
         Comp,
         Del,
         Resize, 
+        Read,
         Help,
         Exit,
     };
@@ -64,7 +81,12 @@ private:
         std::string description;
         Action action;
     };
+    struct Data {
+        std::string command;
+        std::stringstream values;
+    };
 
+    Data m_dataInput;
     using ActionMap = std::vector<ActionDetails>;
     using OperationList = std::vector<std::shared_ptr<Operation>>;
 
@@ -73,13 +95,18 @@ private:
     bool m_running = true;
     std::istream& m_istr;
     std::ostream& m_ostr;
+    void readFromFile();
+    void read();
+    std::optional<int> readOperationIndex() ;
+    void readData();
 
-    std::optional<int> readOperationIndex() const;
     Action readAction() const;
     void runAction(Action action);
+    bool m_isReadngFromFile=false;
+    std::ifstream m_opFile;
 
     static ActionMap createActions();
     static OperationList createOperations();
-
+    std::istream* m_input;
     int m_numOfCommands = 0;
 };
