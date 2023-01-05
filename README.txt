@@ -2,8 +2,8 @@
 Exercise 3 - OOP 2
 
 2. Program Partners:
-Meytal Abrahamian, 211369939
-Bar Oren, 206548752
+Meytal Abrahamian
+Bar Oren
 
 3. General Explanation:
 This exercise is based on the solution of Exercise 1. In this exercise an abnormality 
